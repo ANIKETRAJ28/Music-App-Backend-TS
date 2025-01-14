@@ -12,6 +12,6 @@ export interface IPlaylistResponse {
   songs: ISong[];
 }
 
-export interface IPlaylist {
-  id: string;
-}
+// export interface IPlaylist {
+//   id: string;
+// }
