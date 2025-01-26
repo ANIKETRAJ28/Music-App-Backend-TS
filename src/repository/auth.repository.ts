@@ -1,51 +1,95 @@
-import { prisma } from '@config/db.config';
-import { authToken } from '@util/jwt.util';
+import { prisma } from '../config/db.config';
 import bcrypt from 'bcrypt';
-import { PlaylistRepository } from './playlist.repository';
-import { IUserRequest } from '@interface/user.interface';
-import { SALT } from '@config/dotenv.config';
+import { IUserRegister, IUserResponse } from '../interface/user.interface';
+import { UserRepository } from './user.repository';
+import { getAvatar } from '../util/avatar.util';
+import { IRegister } from '../interface/register.interface';
+import crypto from 'crypto';
+import { BadRequest, Unauthorized } from '../util/ApiResponse.util';
 
 export class AuthRepository {
-  private playlistRepository: PlaylistRepository;
+  private userRepository: UserRepository;
 
   constructor() {
-    this.playlistRepository = new PlaylistRepository();
+    this.userRepository = new UserRepository();
   }
 
-  async login(email: string, password: string): Promise<string> {
+  async register(email: string): Promise<string> {
     try {
-      const user = await prisma.user.findFirst({
+      let user: IRegister | null = await prisma.registUser.findUnique({ where: { email } });
+      const randomBytes = crypto.randomBytes(3); // Generate 3 random bytes (24 bits) using the crypto module
+      const randomNumber = parseInt(randomBytes.toString('hex'), 16); // Convert the random bytes to a hexadecimal string and then parse it as an integer
+      const sixDigitNumber = (randomNumber % 1000000) + ''; // Take the result modulo 1000000 to ensure it is a 6-digit number
+      const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+      if (!user) {
+        user = await prisma.registUser.create({ data: { email, otp: sixDigitNumber, expireyAt: otpExpiry } });
+        return user.email;
+      }
+      if (user.isRegistered) throw new Error('User already registered');
+      await prisma.registUser.update({ where: { email }, data: { otp: sixDigitNumber, expireyAt: otpExpiry } });
+      return user.email;
+    } catch (error) {
+      console.log('error occured in register in repository');
+      throw error;
+    }
+  }
+
+  async verifyOtp(email: string, otp: string): Promise<string> {
+    try {
+      const user = await prisma.registUser.findUnique({ where: { email } });
+      if (!user) throw new Unauthorized('User not registered');
+      if (user.isRegistered) throw new BadRequest('User already registered');
+      if (otp !== user.otp) throw new BadRequest('Invalid OTP');
+      if (user.expireyAt > new Date()) throw new BadRequest('OTP expired');
+      await prisma.registUser.update({
         where: { email },
+        data: { isRegistered: true },
       });
-      if (!user) throw new Error('Invalid email');
-      if (!bcrypt.compare(password, user.password)) throw new Error('Invalid username or password');
-      const token = authToken(user);
-      return token;
+      const createdUser = await this.userRepository.createUser(email);
+      return createdUser.id;
+    } catch (error) {
+      console.log('error occured in verifyOtp in repository');
+      throw error;
+    }
+  }
+
+  async loginByEmail(email: string, password: string): Promise<IUserResponse> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email },
+        include: { defaultPlaylist: true },
+      });
+      if (!user || !user.password || !user.username) throw new Error('Incorrect email or password');
+      const isMatch = bcrypt.compare(password, user.password);
+      if (!isMatch) throw new Error('Incorrect email or password');
+      const avatar = getAvatar(user.username);
+      return { ...user, avatar };
     } catch (error) {
       console.log('error occured in login in repository');
       throw error;
     }
   }
 
-  async signup(user: IUserRequest): Promise<string> {
+  async loginByUsername(username: string, password: string): Promise<IUserResponse> {
     try {
-      const randomId = Math.floor(Math.random() * 53) + 1;
-      const avatar = `https://xsgames.co/randomusers/assets/avatars/pixel/${randomId}.jpg`;
-      const salt = await bcrypt.genSalt(+SALT);
-      user.password = await bcrypt.hash(user.password, salt);
-      const createdUser = await prisma.user.create({
-        data: { ...user, avatar },
+      const user = await prisma.user.findUnique({
+        where: { username },
+        include: { defaultPlaylist: true },
       });
-      const defaultPlaylist = await this.playlistRepository.createPlaylist({
-        name: 'Current Played',
-        userId: createdUser.id,
-      });
-      await prisma.user.update({
-        where: { id: createdUser.id },
-        data: { defaultPlaylistId: defaultPlaylist.id },
-      });
-      const token = authToken(createdUser);
-      return token;
+      if (!user || !user.password || !user.username) throw new Error('Incorrect email or password');
+      const isMatch = bcrypt.compare(password, user.password);
+      if (!isMatch) throw new Error('Incorrect email or password');
+      const avatar = getAvatar(user.username);
+      return { ...user, avatar };
+    } catch (error) {
+      console.log('error occured in login in repository');
+      throw error;
+    }
+  }
+
+  async completeRegister(user: IUserRegister): Promise<IUserResponse> {
+    try {
+      return this.userRepository.updateUserById(user);
     } catch (error) {
       console.log('error occured in signup in repository');
       throw error;

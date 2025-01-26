@@ -1,12 +1,17 @@
-import { prisma } from '@config/db.config';
-import { ISong } from '@interface/song.interface';
+import { prisma } from '../config/db.config';
+import { ISong } from '../interface/song.interface';
+import { PlaylistRepository } from './playlist.repository';
 
 export class SongRepository {
+  private playlistRepository: PlaylistRepository;
+
+  constructor() {
+    this.playlistRepository = new PlaylistRepository();
+  }
+
   async createSong(url: string): Promise<ISong> {
     try {
-      const createdSong = await prisma.song.create({
-        data: { url },
-      });
+      const createdSong = await prisma.song.create({ data: { url } });
       return createdSong;
     } catch (error) {
       console.log('error occured in createSong in repository');

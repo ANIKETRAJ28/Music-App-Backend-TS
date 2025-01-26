@@ -1,6 +1,6 @@
-import { PlaylistService } from '@service/playlist.service';
+import { PlaylistService } from '../service/playlist.service';
 import { NextFunction, Request, Response } from 'express';
-import { BadRequest, Created, sendResponse, Success } from '@util/ApiResponse.util';
+import { BadRequest, Created, sendResponse, Success } from '../util/ApiResponse.util';
 
 export class PlaylistController {
   private playlistService: PlaylistService;
@@ -33,11 +33,11 @@ export class PlaylistController {
     }
   };
 
-  findPlaylistByUserId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  findUserPlaylists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.id;
       if (!userId) throw new Error('UserId required');
-      const playlists = await this.playlistService.findPlaylistByUserId(userId);
+      const playlists = await this.playlistService.findUserPlaylists(userId);
       sendResponse(res, new Success('Playlists found successfully', playlists));
     } catch (error) {
       next(error);
@@ -58,8 +58,14 @@ export class PlaylistController {
     try {
       const playlistId = req.params.id;
       const songId = req.body.song_id;
-      if (!playlistId) sendResponse(res, new BadRequest('playlistId required'));
-      if (!songId) sendResponse(res, new BadRequest('SongId required'));
+      if (!playlistId) {
+        sendResponse(res, new BadRequest('playlistId required'));
+        return;
+      }
+      if (!songId) {
+        sendResponse(res, new BadRequest('SongId required'));
+        return;
+      }
       const updatedPlaylist = await this.playlistService.addSongToPlaylist(playlistId, songId);
       sendResponse(res, new Success('Song added to playlist successfully', updatedPlaylist));
     } catch (error) {

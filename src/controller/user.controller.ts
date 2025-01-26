@@ -1,7 +1,6 @@
-import { IUserRequest } from '@interface/user.interface';
-import { UserService } from '@service/user.service';
+import { UserService } from '../service/user.service';
 import { NextFunction, Request, Response } from 'express';
-import { BadRequest, Created, sendResponse, Success } from '@util/ApiResponse.util';
+import { BadRequest, sendResponse, Success } from '../util/ApiResponse.util';
 
 export class UserController {
   private userService: UserService;
@@ -10,17 +9,17 @@ export class UserController {
     this.userService = new UserService();
   }
 
-  createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const userPayload: IUserRequest = req.body.user;
-      if (!userPayload || !userPayload.email || !userPayload.name || !userPayload.password || !userPayload.username)
-        sendResponse(res, new BadRequest('Required parameters not given'));
-      const createdUser = await this.userService.createUser(userPayload);
-      sendResponse(res, new Created('Successfully created the user', createdUser));
-    } catch (error) {
-      next(error);
-    }
-  };
+  // createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const userPayload: IUserRequest = req.body.user;
+  //     if (!userPayload || !userPayload.email || !userPayload.name || !userPayload.password || !userPayload.username)
+  //       sendResponse(res, new BadRequest('Required parameters not given'));
+  //     const createdUser = await this.userService.createUser(userPayload);
+  //     sendResponse(res, new Created('Successfully created the user', createdUser));
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 
   findUserById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

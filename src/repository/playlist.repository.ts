@@ -1,5 +1,5 @@
-import { prisma } from '@config/db.config';
-import { IPlaylistRequest, IPlaylistResponse } from '@interface/playlist.interface';
+import { prisma } from '../config/db.config';
+import { IPlaylistRequest, IPlaylistResponse } from '../interface/playlist.interface';
 
 export class PlaylistRepository {
   async createPlaylist(playlistPayload: IPlaylistRequest): Promise<IPlaylistResponse> {
@@ -31,7 +31,7 @@ export class PlaylistRepository {
     }
   }
 
-  async findPlaylistByUserId(id: string): Promise<IPlaylistResponse[]> {
+  async findUserPlaylists(id: string): Promise<IPlaylistResponse[]> {
     try {
       const playlists = await prisma.playlist.findMany({
         where: { userId: id },
@@ -87,6 +87,44 @@ export class PlaylistRepository {
       return deletedPlaylist;
     } catch (error) {
       console.log('error occured in deletePlaylist in repository');
+      throw error;
+    }
+  }
+
+  async updatePlaylistName(id: string, name: string): Promise<IPlaylistResponse> {
+    try {
+      const updatePlaylist = await prisma.playlist.update({
+        where: { id },
+        data: { name },
+        include: { songs: true },
+      });
+      return updatePlaylist;
+    } catch (error) {
+      console.log('error occured in updatePlaylistName in repository');
+      throw error;
+    }
+  }
+
+  async updateDefaultPlaylist(id: string, songId: string): Promise<IPlaylistResponse> {
+    try {
+      const playlist = await prisma.playlist.findUnique({ where: { id }, include: { songs: true } });
+      if (!playlist) throw new Error('Playlist doesnot exist');
+      if (playlist.songs.length >= 10) {
+        const lastSongId = playlist.songs[0].id;
+        await this.removeSongFromPlaylist(playlist.id, lastSongId);
+      }
+      const updatePlaylist = await prisma.playlist.update({
+        where: { id },
+        data: {
+          songs: {
+            connect: { id: songId },
+          },
+        },
+        include: { songs: true },
+      });
+      return updatePlaylist;
+    } catch (error) {
+      console.log('error occured in updatePlaylistName in repository');
       throw error;
     }
   }

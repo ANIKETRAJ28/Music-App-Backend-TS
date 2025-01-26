@@ -1,5 +1,6 @@
-import { IUserRequest } from '@interface/user.interface';
-import { AuthRepository } from '@repository/auth.repository';
+import { IUserRegister } from '../interface/user.interface';
+import { AuthRepository } from '../repository/auth.repository';
+import { authToken, registerToken } from '../util/jwt.util';
 
 export class AuthService {
   private authRepository: AuthRepository;
@@ -8,22 +9,52 @@ export class AuthService {
     this.authRepository = new AuthRepository();
   }
 
-  async signup(user: IUserRequest): Promise<string> {
+  async register(email: string): Promise<string> {
     try {
-      const token = await this.authRepository.signup(user);
-      return token;
+      const registeredEmail = await this.authRepository.register(email);
+      return registerToken(registeredEmail);
+    } catch (error) {
+      console.log('error occured in register in service');
+      throw error;
+    }
+  }
+
+  async verifyOtp(email: string, otp: string): Promise<string> {
+    try {
+      const userId = await this.authRepository.verifyOtp(email, otp);
+      return registerToken(userId);
+    } catch (error) {
+      console.log('error occured in verifyOtp in service');
+      throw error;
+    }
+  }
+
+  async completeRegister(userPayload: IUserRegister): Promise<string> {
+    try {
+      const user = await this.authRepository.completeRegister(userPayload);
+      return authToken(user);
     } catch (error) {
       console.log('error occured in signup in service');
       throw error;
     }
   }
 
-  async login(email: string, password: string): Promise<string> {
+  async loginByEmail(email: string, password: string): Promise<string> {
     try {
-      const token = await this.authRepository.login(email, password);
-      return token;
+      const user = await this.authRepository.loginByEmail(email, password);
+      return authToken(user);
     } catch (error) {
-      console.log('error occured in login in service');
+      console.log('error occured in loginByEmail in service');
+      throw error;
+    }
+  }
+
+  async loginByUsername(username: string, password: string): Promise<string> {
+    try {
+      const user = await this.authRepository.loginByUsername(username, password);
+      return authToken(user);
+    } catch (error) {
+      console.log('error occured in loginByUsername in service');
       throw error;
     }
   }

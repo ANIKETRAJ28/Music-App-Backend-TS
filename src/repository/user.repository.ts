@@ -1,8 +1,9 @@
-import { prisma } from '@config/db.config';
+import { prisma } from '../config/db.config';
 import bcrypt from 'bcrypt';
-import { IUserRequest, IUserResponse } from '@interface/user.interface';
+import { IUserRegister, IUserResponse } from '../interface/user.interface';
+import { SALT } from '../config/dotenv.config';
+import { getAvatar } from '../util/avatar.util';
 import { PlaylistRepository } from './playlist.repository';
-import { SALT } from '@config/dotenv.config';
 
 export class UserRepository {
   private playlistRepository: PlaylistRepository;
@@ -11,29 +12,26 @@ export class UserRepository {
     this.playlistRepository = new PlaylistRepository();
   }
 
-  async createUser(user: IUserRequest): Promise<IUserResponse> {
+  async createUser(email: string): Promise<Omit<IUserResponse, 'avatar'>> {
     try {
-      const randomId = Math.floor(Math.random() * 53) + 1;
-      const avatar = `https://xsgames.co/randomusers/assets/avatars/pixel/${randomId}.jpg`;
-      const salt = await bcrypt.genSalt(+SALT);
-      user.password = await bcrypt.hash(user.password, salt);
-      const createdUser = await prisma.user.create({
-        data: { ...user, avatar },
-      });
+      const createdUser = await prisma.user.create({ data: { email } });
       const defaultPlaylist = await this.playlistRepository.createPlaylist({
-        name: 'Current Played',
+        name: 'default playlist',
         userId: createdUser.id,
       });
-      await prisma.user.update({
+
+      const createdUserWithDetails = await prisma.user.update({
         where: { id: createdUser.id },
         data: { defaultPlaylistId: defaultPlaylist.id },
+        include: { defaultPlaylist: true },
       });
+
       return {
-        id: createdUser.id,
-        name: createdUser.name,
-        username: createdUser.username,
-        email: createdUser.email,
-        avatar: createdUser.avatar,
+        id: createdUserWithDetails.id,
+        email: createdUserWithDetails.email,
+        name: createdUserWithDetails.name,
+        username: createdUserWithDetails.username,
+        defaultPlaylist: createdUserWithDetails.defaultPlaylist,
       };
     } catch (error) {
       console.log('error occured in createUser in repository');
@@ -45,9 +43,18 @@ export class UserRepository {
     try {
       const user = await prisma.user.findUnique({
         where: { email },
+        include: { defaultPlaylist: true },
       });
-      if (!user) throw new Error('User not found');
-      return user;
+      if (!user || !user.username) throw new Error('User not found');
+      const avatar = getAvatar(user.username);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        defaultPlaylist: user.defaultPlaylist,
+        avatar,
+      };
     } catch (error) {
       console.log('error occured in findUserByEmail in repository');
       throw error;
@@ -58,9 +65,18 @@ export class UserRepository {
     try {
       const user = await prisma.user.findUnique({
         where: { id },
+        include: { defaultPlaylist: true },
       });
-      if (!user) throw new Error('User not found');
-      return user;
+      if (!user || !user.username) throw new Error('User not found');
+      const avatar = getAvatar(user.username);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        defaultPlaylist: user.defaultPlaylist,
+        avatar,
+      };
     } catch (error) {
       console.log('error occured in findUserById in repository');
       throw error;
@@ -71,9 +87,47 @@ export class UserRepository {
     try {
       const user = await prisma.user.findUnique({
         where: { username },
+        include: { defaultPlaylist: true },
       });
-      if (!user) throw new Error('User not found');
-      return user;
+      if (!user || !user.username) throw new Error('User not found');
+      const avatar = getAvatar(user.username);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        defaultPlaylist: user.defaultPlaylist,
+        avatar,
+      };
+    } catch (error) {
+      console.log('error occured in findUserByUsername in repository');
+      throw error;
+    }
+  }
+
+  async updateUserById(userPayload: IUserRegister): Promise<IUserResponse> {
+    try {
+      const salt = await bcrypt.genSalt(+SALT);
+      userPayload.password = await bcrypt.hash(userPayload.password, salt);
+      const user = await prisma.user.update({
+        where: { id: userPayload.id },
+        data: {
+          name: userPayload.name,
+          username: userPayload.username,
+          password: userPayload.password,
+        },
+        include: { defaultPlaylist: true },
+      });
+      if (!user || !user.username) throw new Error('User not found');
+      const avatar = getAvatar(user.username);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        defaultPlaylist: user.defaultPlaylist,
+        avatar,
+      };
     } catch (error) {
       console.log('error occured in findUserByUsername in repository');
       throw error;

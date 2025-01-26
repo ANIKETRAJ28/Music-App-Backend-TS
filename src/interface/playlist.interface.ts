@@ -5,6 +5,12 @@ export interface IPlaylistRequest {
   userId: string;
 }
 
+export interface IPlaylist {
+  id: string;
+  name: string;
+  userId: string;
+}
+
 export interface IPlaylistResponse {
   id: string;
   name: string;
@@ -12,6 +18,7 @@ export interface IPlaylistResponse {
   songs: ISong[];
 }
 
-// export interface IPlaylist {
-//   id: string;
-// }
+export interface IPlaylistDefaultPlaylistResponse {
+  playlist: IPlaylistResponse;
+  defaultPlaylist: IPlaylistResponse;
+}

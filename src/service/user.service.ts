@@ -1,5 +1,5 @@
-import { IUserRequest, IUserResponse } from '@interface/user.interface';
-import { UserRepository } from '@repository/user.repository';
+import { IUserResponse } from '../interface/user.interface';
+import { UserRepository } from '../repository/user.repository';
 
 export class UserService {
   private userReposiotry: UserRepository;
@@ -8,9 +8,9 @@ export class UserService {
     this.userReposiotry = new UserRepository();
   }
 
-  async createUser(user: IUserRequest): Promise<IUserResponse> {
+  async createUser(email: string): Promise<Omit<IUserResponse, 'avatar'>> {
     try {
-      const createdUser = await this.userReposiotry.createUser(user);
+      const createdUser = await this.userReposiotry.createUser(email);
       return createdUser;
     } catch (error) {
       console.log('error occured in createUser in service');

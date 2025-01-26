@@ -1,11 +1,15 @@
-import { IPlaylistRequest, IPlaylistResponse } from '@interface/playlist.interface';
-import { PlaylistRepository } from '@repository/playlist.repository';
+import { IPlaylistRequest, IPlaylistResponse } from '../interface/playlist.interface';
+import { ISong } from '../interface/song.interface';
+import { PlaylistRepository } from '../repository/playlist.repository';
+import { SongRepository } from '../repository/song.repository';
 
 export class PlaylistService {
   private playlistRepository: PlaylistRepository;
+  private songRepository: SongRepository;
 
   constructor() {
     this.playlistRepository = new PlaylistRepository();
+    this.songRepository = new SongRepository();
   }
 
   async createPlaylist(playlist: IPlaylistRequest): Promise<IPlaylistResponse> {
@@ -28,9 +32,9 @@ export class PlaylistService {
     }
   }
 
-  async findPlaylistByUserId(userId: string): Promise<IPlaylistResponse[]> {
+  async findUserPlaylists(userId: string): Promise<IPlaylistResponse[]> {
     try {
-      const playlists = await this.playlistRepository.findPlaylistByUserId(userId);
+      const playlists = await this.playlistRepository.findUserPlaylists(userId);
       return playlists;
     } catch (error) {
       console.log('error occured in findPlaylistByUserId in service');
@@ -54,6 +58,17 @@ export class PlaylistService {
       return updatedPlaylist;
     } catch (error) {
       console.log('error occured in addSongToPlaylist in service');
+      throw error;
+    }
+  }
+
+  async addSongToPlaylistByUrl(songUrl: string, playlistId: string): Promise<ISong> {
+    try {
+      const createdSong = await this.songRepository.createSong(songUrl);
+      await this.playlistRepository.addSongToPlaylist(playlistId, createdSong.id);
+      return createdSong;
+    } catch (error) {
+      console.log('error occured in addSongToPlaylistByUrl in service');
       throw error;
     }
   }

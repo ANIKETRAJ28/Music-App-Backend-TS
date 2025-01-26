@@ -14,14 +14,13 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  name      String     @db.VarChar(225)
-  username  String     @unique @db.VarChar(225)
-  email     String     @unique @db.VarChar(225)
-  password  String
-  avatar   String
+  id                String     @id @default(uuid())
+  name              String?     @db.VarChar(225)
+  username          String?     @unique @db.VarChar(225)
+  email             String     @unique @db.VarChar(225)
+  password          String?
   defaultPlaylistId String?
-  defaultPlaylist   Playlist?  @relation(name: "DefaultPlaylist", fields: [defaultPlaylistId], references: [id])
+  defaultPlaylist   Playlist?   @relation(name: "UserDefaultPlaylist", fields: [defaultPlaylistId], references: [id])
   playlists         Playlist[] @relation(name: "UserPlaylist")
 }
 
@@ -32,10 +31,18 @@ model Song {
 }
 
 model Playlist {
-  id     String @id @default(uuid())
-  name   String
-  userId String @unique
-  user      User       @relation(name: "UserPlaylist", fields: [userId], references: [id], onDelete: Cascade)
-  songs     Song[]
-  usersWithDefault User[] @relation(name: "DefaultPlaylist")
+  id              String @id @default(uuid())
+  name            String
+  userId          String
+  user            User   @relation(name: "UserPlaylist", fields: [userId], references: [id], onDelete: Cascade)
+  songs           Song[]
+  defaultPlaylist User[] @relation("UserDefaultPlaylist")
+}
+
+model RegistUser {
+  id String @id @default(uuid())
+  email String @unique
+  otp String @db.VarChar(6)
+  isRegistered Boolean @default(false)
+  expireyAt DateTime
 }

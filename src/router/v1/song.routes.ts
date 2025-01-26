@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { SongController } from '@controller/song.controller';
+import { SongController } from '../../controller/song.controller';
 
 const songController = new SongController();
 export const songRouter = Router();
