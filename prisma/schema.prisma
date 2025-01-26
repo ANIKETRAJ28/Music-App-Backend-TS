@@ -15,12 +15,12 @@ datasource db {
 
 model User {
   id                String     @id @default(uuid())
-  name              String?     @db.VarChar(225)
-  username          String?     @unique @db.VarChar(225)
+  name              String?    @db.VarChar(225)
+  username          String?    @unique @db.VarChar(225)
   email             String     @unique @db.VarChar(225)
   password          String?
   defaultPlaylistId String?
-  defaultPlaylist   Playlist?   @relation(name: "UserDefaultPlaylist", fields: [defaultPlaylistId], references: [id])
+  defaultPlaylist   Playlist?  @relation(name: "UserDefaultPlaylist", fields: [defaultPlaylistId], references: [id])
   playlists         Playlist[] @relation(name: "UserPlaylist")
 }
 
@@ -40,9 +40,9 @@ model Playlist {
 }
 
 model RegistUser {
-  id String @id @default(uuid())
-  email String @unique
-  otp String @db.VarChar(6)
-  isRegistered Boolean @default(false)
-  expireyAt DateTime
+  id           String   @id @default(uuid())
+  email        String   @unique
+  otp          String   @db.VarChar(6)
+  isRegistered Boolean  @default(false)
+  expireyAt    DateTime
 }
