@@ -5,56 +5,52 @@ import jwt from 'jsonwebtoken';
 
 export function verifyJwtToken(req: Request, res: Response, next: NextFunction): void {
   const token = req.cookies.jwtToken;
-  if (!token) {
-    sendResponse(res, new Unauthorized('User not authenticated'));
-  }
+  if (!token) throw new Unauthorized('User not authenticated.');
   const decodedToken = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
   if (decodedToken && typeof decodedToken !== 'string') {
     req.id = decodedToken.id;
     req.defaultPlaylistId = decodedToken.defaultPlaylist.id;
     next();
   } else {
-    sendResponse(res, new Unauthorized('User not authenticated'));
+    throw new Unauthorized('User not authenticated.');
   }
 }
 
 export function verifyOtpToken(req: Request, res: Response, next: NextFunction): void {
   const token = req.cookies.otpToken;
-  if (!token) {
-    sendResponse(res, new Unauthorized('User not authenticated'));
-  }
+  if (!token) throw new Unauthorized('User not authenticated.');
   const decodedToken = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
   if (decodedToken && typeof decodedToken === 'string') {
     req.id = decodedToken;
     next();
   } else {
-    sendResponse(res, new Unauthorized('User not authenticated'));
+    throw new Unauthorized('User not authenticated.');
   }
 }
 
 export function verifyAuthToken(req: Request, res: Response, next: NextFunction): void {
   const token = req.cookies.authToken;
   if (!token) {
-    sendResponse(res, new Unauthorized('User not authenticated'));
+    throw new Unauthorized('User not authenticated.');
   }
   const decodedToken = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
   if (decodedToken && typeof decodedToken === 'string') {
     req.email = decodedToken;
     next();
   } else {
-    sendResponse(res, new Unauthorized('User not authenticated'));
+    throw new Unauthorized('User not authenticated.');
   }
 }
 
 export function getUser(req: Request, res: Response): void {
   const token = req.cookies.jwtToken;
   if (!token) {
-    sendResponse(res, new Unauthorized('User not authenticated'));
+    throw new Unauthorized('User not authenticated.');
   }
   const decodedToken = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
   if (decodedToken && typeof decodedToken !== 'string') {
-    sendResponse(res, new Success('User data', decodedToken));
+    sendResponse(res, new Success('User data.', decodedToken));
   } else {
-    sendResponse(res, new Unauthorized('User not authenticated'));
+    throw new Unauthorized('User not authenticated.');
   }
 }

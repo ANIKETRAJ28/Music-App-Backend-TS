@@ -9,42 +9,22 @@ export class UserService {
   }
 
   async createUser(email: string): Promise<Omit<IUserResponse, 'avatar'>> {
-    try {
-      const createdUser = await this.userReposiotry.createUser(email);
-      return createdUser;
-    } catch (error) {
-      console.log('error occured in createUser in service');
-      throw error;
-    }
+    const createdUser = await this.userReposiotry.createUser(email);
+    return createdUser;
   }
 
   async findUserById(id: string): Promise<IUserResponse> {
-    try {
-      const user = await this.userReposiotry.findUserById(id);
-      return user;
-    } catch (error) {
-      console.log('error occured in findUserById in service');
-      throw error;
-    }
+    const user = await this.userReposiotry.findUserById(id);
+    return user;
   }
 
   async findUserByEmail(email: string): Promise<IUserResponse> {
-    try {
-      const user = await this.userReposiotry.findUserByEmail(email);
-      return user;
-    } catch (error) {
-      console.log('error occured in findUserByEmail in service');
-      throw error;
-    }
+    const user = await this.userReposiotry.findUserByEmail(email);
+    return user;
   }
 
   async findByUsername(username: string): Promise<IUserResponse> {
-    try {
-      const user = await this.userReposiotry.findUserByUsername(username);
-      return user;
-    } catch (error) {
-      console.log('error occured in findUserByUsername in service');
-      throw error;
-    }
+    const user = await this.userReposiotry.findUserByUsername(username);
+    return user;
   }
 }

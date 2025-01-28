@@ -1,8 +1,9 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { PORT } from './config/dotenv.config';
 import { apiRouter } from './router';
+import { ErrorResponse } from './util/ApiResponse.util';
 const app: Express = express();
 
 const corsOption = {
@@ -19,6 +20,11 @@ app.use('/api', apiRouter);
 
 app.get('/', (_: Request, res: Response) => {
   res.send('Alive...');
+});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  new ErrorResponse(res, err);
 });
 
 app.listen(PORT, () => {

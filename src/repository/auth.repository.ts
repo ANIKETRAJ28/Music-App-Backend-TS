@@ -25,30 +25,30 @@ export class AuthRepository {
         user = await prisma.registUser.create({ data: { email, otp: sixDigitNumber, expireyAt: otpExpiry } });
         return user.email;
       }
-      if (user.isRegistered) throw new Error('User already registered');
+      if (user.isRegistered) throw new BadRequest('User already registered.');
       await prisma.registUser.update({ where: { email }, data: { otp: sixDigitNumber, expireyAt: otpExpiry } });
       return user.email;
     } catch (error) {
-      console.log('error occured in register in repository');
+      console.error('Error occurred in register method in AuthRepository:', error);
       throw error;
     }
   }
 
   async verifyOtp(email: string, otp: string): Promise<string> {
     try {
-      const user = await prisma.registUser.findUnique({ where: { email } });
-      if (!user) throw new Unauthorized('User not registered');
-      if (user.isRegistered) throw new BadRequest('User already registered');
-      if (otp !== user.otp) throw new BadRequest('Invalid OTP');
-      if (user.expireyAt > new Date()) throw new BadRequest('OTP expired');
-      await prisma.registUser.update({
+      let user = await prisma.registUser.findUnique({ where: { email } });
+      if (!user) throw new Unauthorized('User not registered.');
+      if (user.isRegistered) throw new BadRequest('User already registered.');
+      if (otp !== user.otp) throw new BadRequest('Invalid OTP.');
+      if (user.expireyAt < new Date()) throw new BadRequest('OTP expired.');
+      user = await prisma.registUser.update({
         where: { email },
         data: { isRegistered: true },
       });
       const createdUser = await this.userRepository.createUser(email);
       return createdUser.id;
     } catch (error) {
-      console.log('error occured in verifyOtp in repository');
+      console.error('Error occurred in verifyOtp method in AuthRepository:', error);
       throw error;
     }
   }
@@ -59,13 +59,13 @@ export class AuthRepository {
         where: { email },
         include: { defaultPlaylist: true },
       });
-      if (!user || !user.password || !user.username) throw new Error('Incorrect email or password');
+      if (!user || !user.password || !user.username) throw new Error('Incorrect email or password.');
       const isMatch = bcrypt.compare(password, user.password);
-      if (!isMatch) throw new Error('Incorrect email or password');
+      if (!isMatch) throw new Error('Incorrect email or password.');
       const avatar = getAvatar(user.username);
       return { ...user, avatar };
     } catch (error) {
-      console.log('error occured in login in repository');
+      console.error('Error occurred in loginByEmail method in AuthRepository:', error);
       throw error;
     }
   }
@@ -76,13 +76,13 @@ export class AuthRepository {
         where: { username },
         include: { defaultPlaylist: true },
       });
-      if (!user || !user.password || !user.username) throw new Error('Incorrect email or password');
+      if (!user || !user.password || !user.username) throw new Error('Incorrect email or password.');
       const isMatch = bcrypt.compare(password, user.password);
-      if (!isMatch) throw new Error('Incorrect email or password');
+      if (!isMatch) throw new Error('Incorrect email or password.');
       const avatar = getAvatar(user.username);
       return { ...user, avatar };
     } catch (error) {
-      console.log('error occured in login in repository');
+      console.error('Error occurred in loginByUsername method in AuthRepository:', error);
       throw error;
     }
   }
@@ -91,7 +91,7 @@ export class AuthRepository {
     try {
       return this.userRepository.updateUserById(user);
     } catch (error) {
-      console.log('error occured in signup in repository');
+      console.error('Error occurred in completeRegister method in AuthRepository:', error);
       throw error;
     }
   }

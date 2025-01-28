@@ -4,6 +4,7 @@ import { IUserRegister, IUserResponse } from '../interface/user.interface';
 import { SALT } from '../config/dotenv.config';
 import { getAvatar } from '../util/avatar.util';
 import { PlaylistRepository } from './playlist.repository';
+import { NotFound } from '../util/ApiResponse.util';
 
 export class UserRepository {
   private playlistRepository: PlaylistRepository;
@@ -34,7 +35,7 @@ export class UserRepository {
         defaultPlaylist: createdUserWithDetails.defaultPlaylist,
       };
     } catch (error) {
-      console.log('error occured in createUser in repository');
+      console.error('Error occurred in createUser method in UserRepository:', error);
       throw error;
     }
   }
@@ -45,7 +46,7 @@ export class UserRepository {
         where: { email },
         include: { defaultPlaylist: true },
       });
-      if (!user || !user.username) throw new Error('User not found');
+      if (!user || !user.username) throw new NotFound('User not found.');
       const avatar = getAvatar(user.username);
       return {
         id: user.id,
@@ -56,7 +57,7 @@ export class UserRepository {
         avatar,
       };
     } catch (error) {
-      console.log('error occured in findUserByEmail in repository');
+      console.error('Error occurred in findUserByEmail method in UserRepository:', error);
       throw error;
     }
   }
@@ -67,7 +68,7 @@ export class UserRepository {
         where: { id },
         include: { defaultPlaylist: true },
       });
-      if (!user || !user.username) throw new Error('User not found');
+      if (!user || !user.username) throw new NotFound('User not found.');
       const avatar = getAvatar(user.username);
       return {
         id: user.id,
@@ -78,7 +79,7 @@ export class UserRepository {
         avatar,
       };
     } catch (error) {
-      console.log('error occured in findUserById in repository');
+      console.error('Error occurred in findUserById method in UserRepository:', error);
       throw error;
     }
   }
@@ -89,7 +90,7 @@ export class UserRepository {
         where: { username },
         include: { defaultPlaylist: true },
       });
-      if (!user || !user.username) throw new Error('User not found');
+      if (!user || !user.username) throw new NotFound('User not found.');
       const avatar = getAvatar(user.username);
       return {
         id: user.id,
@@ -100,7 +101,7 @@ export class UserRepository {
         avatar,
       };
     } catch (error) {
-      console.log('error occured in findUserByUsername in repository');
+      console.error('Error occurred in findUserByUsername method in UserRepository:', error);
       throw error;
     }
   }
@@ -118,7 +119,7 @@ export class UserRepository {
         },
         include: { defaultPlaylist: true },
       });
-      if (!user || !user.username) throw new Error('User not found');
+      if (!user || !user.username) throw new NotFound('User not found.');
       const avatar = getAvatar(user.username);
       return {
         id: user.id,
@@ -129,7 +130,7 @@ export class UserRepository {
         avatar,
       };
     } catch (error) {
-      console.log('error occured in findUserByUsername in repository');
+      console.error('Error occurred in updateUserById method in UserRepository:', error);
       throw error;
     }
   }

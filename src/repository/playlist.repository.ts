@@ -1,5 +1,6 @@
 import { prisma } from '../config/db.config';
 import { IPlaylistRequest, IPlaylistResponse } from '../interface/playlist.interface';
+import { NotFound } from '../util/ApiResponse.util';
 
 export class PlaylistRepository {
   async createPlaylist(playlistPayload: IPlaylistRequest): Promise<IPlaylistResponse> {
@@ -23,7 +24,7 @@ export class PlaylistRepository {
           songs: true,
         },
       });
-      if (!playlist) throw new Error('Playlist not found');
+      if (!playlist) throw new NotFound('Playlist not found.');
       return playlist;
     } catch (error) {
       console.log('error occured in findPlaylistById in repository');
@@ -108,7 +109,7 @@ export class PlaylistRepository {
   async updateDefaultPlaylist(id: string, songId: string): Promise<IPlaylistResponse> {
     try {
       const playlist = await prisma.playlist.findUnique({ where: { id }, include: { songs: true } });
-      if (!playlist) throw new Error('Playlist doesnot exist');
+      if (!playlist) throw new NotFound('Playlist not exist.');
       if (playlist.songs.length >= 10) {
         const lastSongId = playlist.songs[0].id;
         await this.removeSongFromPlaylist(playlist.id, lastSongId);

@@ -13,11 +13,12 @@ export class PlaylistController {
     try {
       const userId = req.id;
       const name = req.body.name;
-      if (!userId) sendResponse(res, new BadRequest('UserId required'));
-      if (!name) sendResponse(res, new BadRequest('Name required'));
-      const playlist = await this.playlistService.createPlaylist(req.body);
-      sendResponse(res, new Created('Playlist created successfully', playlist));
+      if (!userId) throw new BadRequest('User ID is required to create a playlist.');
+      if (!name) throw new BadRequest('Playlist name is required.');
+      const playlist = await this.playlistService.createPlaylist({ userId, name });
+      sendResponse(res, new Created('Playlist created successfully.', playlist));
     } catch (error) {
+      console.error('Error occurred in createPlaylist method:', error);
       next(error);
     }
   };
@@ -25,10 +26,11 @@ export class PlaylistController {
   findPlaylistById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = req.params.id;
-      if (!id) sendResponse(res, new BadRequest('Id required'));
+      if (!id) throw new BadRequest('Playlist ID is required to fetch the playlist.');
       const playlist = await this.playlistService.findPlaylistById(id);
-      sendResponse(res, new Success('Playlist found successfully', playlist));
+      sendResponse(res, new Success('Playlist found successfully.', playlist));
     } catch (error) {
+      console.error('Error occurred in findPlaylistById method:', error);
       next(error);
     }
   };
@@ -36,10 +38,11 @@ export class PlaylistController {
   findUserPlaylists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.id;
-      if (!userId) throw new Error('UserId required');
+      if (!userId) throw new BadRequest('User ID is required to fetch playlists.');
       const playlists = await this.playlistService.findUserPlaylists(userId);
-      sendResponse(res, new Success('Playlists found successfully', playlists));
+      sendResponse(res, new Success('Playlists found successfully.', playlists));
     } catch (error) {
+      console.error('Error occurred in findUserPlaylists method:', error);
       next(error);
     }
   };
@@ -47,9 +50,14 @@ export class PlaylistController {
   deletePlaylist = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const playlistId = req.params.id;
+      const defaultPlaylistId = req.defaultPlaylistId;
+      if (!defaultPlaylistId) throw new BadRequest('Default playlist ID is not found.');
+      if (!playlistId) throw new BadRequest('Playlist ID is required to delete the playlist.');
+      if (playlistId === defaultPlaylistId) throw new BadRequest('Cannot delete the default playlist.');
       const playlist = await this.playlistService.deletePlaylist(playlistId);
-      res.status(200).json(playlist);
+      sendResponse(res, new Success('Playlist deleted successfully.', playlist));
     } catch (error) {
+      console.error('Error occurred in deletePlaylist method:', error);
       next(error);
     }
   };
@@ -57,18 +65,13 @@ export class PlaylistController {
   addSongToPlaylist = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const playlistId = req.params.id;
-      const songId = req.body.song_id;
-      if (!playlistId) {
-        sendResponse(res, new BadRequest('playlistId required'));
-        return;
-      }
-      if (!songId) {
-        sendResponse(res, new BadRequest('SongId required'));
-        return;
-      }
+      const songId = req.params.song_id;
+      if (!playlistId) throw new BadRequest('Playlist ID is required to add a song.');
+      if (!songId) throw new BadRequest('Song ID is required to add to the playlist.');
       const updatedPlaylist = await this.playlistService.addSongToPlaylist(playlistId, songId);
-      sendResponse(res, new Success('Song added to playlist successfully', updatedPlaylist));
+      sendResponse(res, new Success('Song added to playlist successfully.', updatedPlaylist));
     } catch (error) {
+      console.error('Error occurred in addSongToPlaylist method:', error);
       next(error);
     }
   };
@@ -76,12 +79,13 @@ export class PlaylistController {
   removeSongFromPlaylist = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const playlistId = req.params.id;
-      const songId = req.body.song_id;
-      if (!playlistId) sendResponse(res, new BadRequest('playlistId required'));
-      if (!songId) sendResponse(res, new BadRequest('SongId required'));
+      const songId = req.params.song_id;
+      if (!playlistId) throw new BadRequest('Playlist ID is required to remove a song.');
+      if (!songId) throw new BadRequest('Song ID is required to remove from the playlist.');
       const updatedPlaylist = await this.playlistService.removeSongFromPlaylist(playlistId, songId);
-      sendResponse(res, new Success('Song removed from playlist successfully', updatedPlaylist));
+      sendResponse(res, new Success('Song removed from playlist successfully.', updatedPlaylist));
     } catch (error) {
+      console.error('Error occurred in removeSongFromPlaylist method:', error);
       next(error);
     }
   };

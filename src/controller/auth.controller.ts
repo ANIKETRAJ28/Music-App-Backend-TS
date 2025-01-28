@@ -13,7 +13,7 @@ export class AuthController {
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const email = req.params.email;
-      if (!email || typeof email !== 'string') throw new Error('Email required for registation');
+      if (!email || typeof email !== 'string') throw new BadRequest('Email is required for registration.');
       const token = await this.authService.register(email);
       const cookieOptions = {
         domain: 'localhost', // Can be changed for a production domain
@@ -24,8 +24,9 @@ export class AuthController {
         path: '/',
       } as CookieOptions;
       res.cookie('authToken', token, cookieOptions);
-      sendResponse(res, new Success('User registered successful'));
+      sendResponse(res, new Success('User registered successfully.'));
     } catch (error) {
+      console.log('An error occurred during registration in the controller.');
       next(error);
     }
   };
@@ -34,14 +35,8 @@ export class AuthController {
     try {
       const email = req.email;
       const otp = req.params.otp;
-      if (!email) {
-        throw new Unauthorized('Email not registered');
-        return;
-      }
-      if (!otp) {
-        throw new Unauthorized('Email not registered');
-        return;
-      }
+      if (!email) throw new Unauthorized('Email is not registered.');
+      if (!otp) throw new Unauthorized('OTP is required for verification.');
       const token = await this.authService.verifyOtp(email, otp);
       const cookieOptions = {
         domain: 'localhost', // Can be changed for a production domain
@@ -53,8 +48,9 @@ export class AuthController {
       } as CookieOptions;
       res.clearCookie('authToken');
       res.cookie('otpToken', token, cookieOptions);
-      sendResponse(res, new Success('User verified successful'));
+      sendResponse(res, new Success('User verified successfully.'));
     } catch (error) {
+      console.log('An error occurred during OTP verification in the controller.');
       next(error);
     }
   };
@@ -63,14 +59,8 @@ export class AuthController {
     try {
       const id = req.id;
       const user: Omit<IUserRegister, 'id'> = req.body.user;
-      if (!id) {
-        sendResponse(res, new Unauthorized('Email not registered'));
-        return;
-      }
-      if (!user) {
-        sendResponse(res, new BadRequest('User data required'));
-        return;
-      }
+      if (!id) throw new Unauthorized('Email is not registered.');
+      if (!user) throw new BadRequest('User data is required.');
       const token = await this.authService.completeRegister({ ...user, id });
       const cookieOptions = {
         domain: 'localhost', // Can be changed for a production domain
@@ -82,8 +72,9 @@ export class AuthController {
       } as CookieOptions;
       res.clearCookie('otpToken');
       res.cookie('jwtToken', token, cookieOptions);
-      sendResponse(res, new Success('Completed registration successfully'));
+      sendResponse(res, new Success('Registration completed successfully.'));
     } catch (error) {
+      console.log('An error occurred during registration completion in the controller.');
       next(error);
     }
   };
@@ -91,10 +82,7 @@ export class AuthController {
   loginByEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const user: IUserAuthRequest = req.body.user;
-      if (!user || !user.email) {
-        sendResponse(res, new BadRequest('Credentials required'));
-        return;
-      }
+      if (!user || !user.email) throw new BadRequest('Email and password are required for login.');
       const token = await this.authService.loginByEmail(user.email, user.password);
       const cookieOptions = {
         domain: 'localhost', // Can be changed for a production domain
@@ -105,8 +93,9 @@ export class AuthController {
         path: '/',
       } as CookieOptions;
       res.cookie('jwtToken', token, cookieOptions);
-      sendResponse(res, new Success('Login successful'));
+      sendResponse(res, new Success('Login successful.'));
     } catch (error) {
+      console.log('An error occurred during email login in the controller.');
       next(error);
     }
   };
@@ -114,10 +103,7 @@ export class AuthController {
   loginByUsername = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const user: IUserAuthRequest = req.body.user;
-      if (!user || !user.username) {
-        sendResponse(res, new BadRequest('Credentials required'));
-        return;
-      }
+      if (!user || !user.username) throw new BadRequest('Username and password are required for login.');
       const token = await this.authService.loginByUsername(user.username, user.password);
       const cookieOptions = {
         domain: 'localhost', // Can be changed for a production domain
@@ -128,18 +114,15 @@ export class AuthController {
         path: '/',
       } as CookieOptions;
       res.cookie('jwtToken', token, cookieOptions);
-      sendResponse(res, new Success('Login successful'));
+      sendResponse(res, new Success('Login successful.'));
     } catch (error) {
+      console.log('An error occurred during username login in the controller.');
       next(error);
     }
   };
 
-  logout = (req: Request, res: Response, next: NextFunction): void => {
-    try {
-      res.clearCookie('jwtToken');
-      sendResponse(res, new Success('Logout successful'));
-    } catch (error) {
-      next(error);
-    }
+  logout = (req: Request, res: Response): void => {
+    res.clearCookie('jwtToken');
+    sendResponse(res, new Success('Logout successful.'));
   };
 }

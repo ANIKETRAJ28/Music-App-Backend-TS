@@ -1,56 +1,84 @@
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { Response } from 'express';
+
+export function sendResponse(res: Response, response: ApiResponse): void {
+  res.status(response.statusCode).json({
+    message: response.message,
+    data: response.data,
+  });
+}
 
 class ApiResponse {
   constructor(
-    public status: string,
     public message: string,
     public statusCode: number,
     public data?: unknown,
   ) {}
 }
 
-class Success extends ApiResponse {
-  constructor(message: string, data?: unknown) {
-    super('success', message, 200, data);
+export class ErrorResponse {
+  constructor(
+    public res: Response,
+    public error: Error | PrismaClientKnownRequestError,
+  ) {
+    let statusCode = 500;
+    let message = error.message;
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P1000':
+          statusCode = 503;
+          message = 'Database connection error';
+          break;
+        case 'P1002':
+          statusCode = 504;
+          message = 'Database connection timeout';
+          break;
+        case 'P2001':
+          statusCode = 404;
+          message = 'Record not found';
+          break;
+        case 'P2002':
+          statusCode = 409;
+          message = 'Unique constraint failed';
+          break;
+      }
+    }
+    this.res.status(statusCode).json({ message });
   }
 }
 
-class NotFound extends ApiResponse {
+export class Created extends ApiResponse {
   constructor(message: string, data?: unknown) {
-    super('not found', message, 404, data);
+    super(message, 201, data);
   }
 }
 
-class BadRequest extends ApiResponse {
+export class Success extends ApiResponse {
   constructor(message: string, data?: unknown) {
-    super('bad request', message, 400, data);
+    super(message, 200, data);
   }
 }
 
-class Unauthorized extends ApiResponse {
+export class Unauthorized extends ApiResponse {
   constructor(message: string, data?: unknown) {
-    super('unauthorized', message, 401, data);
+    super(message, 401, data);
   }
 }
 
-class Created extends ApiResponse {
+export class NotFound extends ApiResponse {
   constructor(message: string, data?: unknown) {
-    super('created', message, 201, data);
+    super(message, 404, data);
   }
 }
 
-class InternalServerError extends ApiResponse {
+export class BadRequest extends ApiResponse {
   constructor(message: string, data?: unknown) {
-    super('internal server error', message, 500, data);
+    super(message, 400, data);
   }
 }
 
-function sendResponse(res: Response, response: ApiResponse): void {
-  res.status(response.statusCode).json({
-    status: response.status,
-    message: response.message,
-    data: response.data,
-  });
+export class InternalServerError extends ApiResponse {
+  constructor(message: string, data?: unknown) {
+    super(message, 500, data);
+  }
 }
-
-export { ApiResponse, Success, NotFound, BadRequest, Unauthorized, Created, InternalServerError, sendResponse };

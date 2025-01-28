@@ -9,26 +9,14 @@ export class UserController {
     this.userService = new UserService();
   }
 
-  // createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   try {
-  //     const userPayload: IUserRequest = req.body.user;
-  //     if (!userPayload || !userPayload.email || !userPayload.name || !userPayload.password || !userPayload.username)
-  //       sendResponse(res, new BadRequest('Required parameters not given'));
-  //     const createdUser = await this.userService.createUser(userPayload);
-  //     sendResponse(res, new Created('Successfully created the user', createdUser));
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
-
   findUserById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = req.params.id;
-      if (!id) throw new Error('Id required');
-      sendResponse(res, new BadRequest('Id required'));
+      if (!id) throw new BadRequest('User ID is required to fetch the user.');
       const user = await this.userService.findUserById(id);
-      sendResponse(res, new Success('User found successfully', user));
+      sendResponse(res, new Success('User found successfully by ID.', user));
     } catch (error) {
+      console.error('Error occurred in findUserById method:', error);
       next(error);
     }
   };
@@ -36,10 +24,11 @@ export class UserController {
   findUserByEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const email = req.params.email;
-      if (!email) sendResponse(res, new BadRequest('Email required'));
+      if (!email) throw new BadRequest('Email is required to fetch the user.');
       const user = await this.userService.findUserByEmail(email);
-      sendResponse(res, new Success('User found successfully', user));
+      sendResponse(res, new Success('User found successfully by email.', user));
     } catch (error) {
+      console.error('Error occurred in findUserByEmail method:', error);
       next(error);
     }
   };
@@ -47,10 +36,11 @@ export class UserController {
   findUserByUsername = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const username = req.params.username;
-      if (!username) sendResponse(res, new BadRequest('Username required'));
+      if (!username) throw new BadRequest('Username is required to fetch the user.');
       const user = await this.userService.findByUsername(username);
-      sendResponse(res, new Success('User found successfully', user));
+      sendResponse(res, new Success('User found successfully by username.', user));
     } catch (error) {
+      console.error('Error occurred in findUserByUsername method:', error);
       next(error);
     }
   };

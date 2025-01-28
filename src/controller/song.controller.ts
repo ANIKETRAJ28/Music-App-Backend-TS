@@ -13,17 +13,12 @@ export class SongController {
     try {
       const url = req.body.url;
       const defaultPlaylistId = req.defaultPlaylistId;
-      if (!url) {
-        sendResponse(res, new BadRequest('Song url required'));
-        return;
-      }
-      if (!defaultPlaylistId) {
-        sendResponse(res, new BadRequest('DefaultPlaylistId not found'));
-        return;
-      }
+      if (!url) throw new BadRequest('Song URL is required to create a new song.');
+      if (!defaultPlaylistId) throw new BadRequest('Default playlist ID is not found.');
       const song = await this.songService.createSongForDefaultPlaylist(url, defaultPlaylistId);
-      sendResponse(res, new Created('Song created successfully', song));
+      sendResponse(res, new Created('Song created successfully.', song));
     } catch (error) {
+      console.error('Error occurred in createSong method:', error);
       next(error);
     }
   };
@@ -31,10 +26,11 @@ export class SongController {
   findSongById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = req.params.id;
-      sendResponse(res, new BadRequest('SongId required'));
+      if (!id) throw new BadRequest('Song ID is required to fetch the song.');
       const song = await this.songService.findSongById(id);
-      sendResponse(res, new Success('Song fetched successfully', song));
+      sendResponse(res, new Success('Song fetched successfully.', song));
     } catch (error) {
+      console.error('Error occurred in findSongById method:', error);
       next(error);
     }
   };
