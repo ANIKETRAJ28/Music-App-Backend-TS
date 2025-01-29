@@ -27,6 +27,9 @@ model User {
 model Song {
   id        String     @id @default(uuid())
   url       String
+  title     String
+  thumbnail    String
+  description String
   playlists Playlist[]
 }
 

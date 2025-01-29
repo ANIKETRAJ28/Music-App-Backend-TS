@@ -1,8 +1,15 @@
 import { prisma } from '../config/db.config';
 import { IPlaylistRequest, IPlaylistResponse } from '../interface/playlist.interface';
 import { NotFound } from '../util/ApiResponse.util';
+import { SongRepository } from './song.repository';
 
 export class PlaylistRepository {
+  private songRepository: SongRepository;
+
+  constructor() {
+    this.songRepository = new SongRepository();
+  }
+
   async createPlaylist(playlistPayload: IPlaylistRequest): Promise<IPlaylistResponse> {
     try {
       const createdPlaylist = await prisma.playlist.create({
@@ -32,13 +39,13 @@ export class PlaylistRepository {
     }
   }
 
-  async findUserPlaylists(id: string): Promise<IPlaylistResponse[]> {
+  async findUserPlaylists(id: string, defaultPlaylistId: string): Promise<IPlaylistResponse[]> {
     try {
       const playlists = await prisma.playlist.findMany({
         where: { userId: id },
         include: { songs: true },
       });
-      return playlists;
+      return playlists.filter((playlist) => playlist.id !== defaultPlaylistId);
     } catch (error) {
       console.log('error occured in findPlaylistByUserId in repository');
       throw error;

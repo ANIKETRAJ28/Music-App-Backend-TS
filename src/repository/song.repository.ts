@@ -3,9 +3,16 @@ import { ISong } from '../interface/song.interface';
 import { NotFound } from '../util/ApiResponse.util';
 
 export class SongRepository {
-  async createSong(url: string): Promise<ISong> {
+  async createSong(url: string, title: string, thumbnail: string, description: string): Promise<ISong> {
     try {
-      const createdSong = await prisma.song.create({ data: { url } });
+      const createdSong = await prisma.song.create({
+        data: {
+          description,
+          thumbnail,
+          title,
+          url,
+        },
+      });
       return createdSong;
     } catch (error) {
       console.error('Error occurred in createSong method in SongRepository:', error);

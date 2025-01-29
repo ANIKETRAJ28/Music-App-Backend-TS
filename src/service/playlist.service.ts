@@ -1,15 +1,15 @@
 import { IPlaylistRequest, IPlaylistResponse } from '../interface/playlist.interface';
 import { ISong } from '../interface/song.interface';
 import { PlaylistRepository } from '../repository/playlist.repository';
-import { SongRepository } from '../repository/song.repository';
+import { SongService } from './song.service';
 
 export class PlaylistService {
   private playlistRepository: PlaylistRepository;
-  private songRepository: SongRepository;
+  private songService: SongService;
 
   constructor() {
     this.playlistRepository = new PlaylistRepository();
-    this.songRepository = new SongRepository();
+    this.songService = new SongService();
   }
 
   async createPlaylist(playlist: IPlaylistRequest): Promise<IPlaylistResponse> {
@@ -22,8 +22,8 @@ export class PlaylistService {
     return playlist;
   }
 
-  async findUserPlaylists(userId: string): Promise<IPlaylistResponse[]> {
-    const playlists = await this.playlistRepository.findUserPlaylists(userId);
+  async findUserPlaylists(userId: string, defaultPlaylistId: string): Promise<IPlaylistResponse[]> {
+    const playlists = await this.playlistRepository.findUserPlaylists(userId, defaultPlaylistId);
     return playlists;
   }
 
@@ -38,7 +38,7 @@ export class PlaylistService {
   }
 
   async addSongToPlaylistByUrl(songUrl: string, playlistId: string): Promise<ISong> {
-    const createdSong = await this.songRepository.createSong(songUrl);
+    const createdSong = await this.songService.createSong(songUrl);
     await this.playlistRepository.addSongToPlaylist(playlistId, createdSong.id);
     return createdSong;
   }

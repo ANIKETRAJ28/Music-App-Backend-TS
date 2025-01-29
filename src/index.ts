@@ -4,6 +4,10 @@ import cookieParser from 'cookie-parser';
 import { PORT } from './config/dotenv.config';
 import { apiRouter } from './router';
 import { ErrorResponse } from './util/ApiResponse.util';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import youtubesearchapi from 'youtube-search-api';
 const app: Express = express();
 
 const corsOption = {
@@ -18,7 +22,15 @@ app.use(cookieParser());
 
 app.use('/api', apiRouter);
 
-app.get('/', (_: Request, res: Response) => {
+// app.get('/', (_: Request, res: Response) => {
+//   res.send('Alive...');
+// });
+
+app.get('/', async (req: Request, res: Response) => {
+  const extractedId = 'Hysrm6MdfCo';
+  const videoDetails = await youtubesearchapi.GetVideoDetails(extractedId);
+  console.log(videoDetails.thumbnail);
+  console.log('video...', videoDetails);
   res.send('Alive...');
 });
 

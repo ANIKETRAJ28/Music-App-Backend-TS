@@ -1,6 +1,6 @@
 import { PlaylistService } from '../service/playlist.service';
 import { NextFunction, Request, Response } from 'express';
-import { BadRequest, Created, sendResponse, Success } from '../util/ApiResponse.util';
+import { BadRequest, Created, NotFound, sendResponse, Success } from '../util/ApiResponse.util';
 
 export class PlaylistController {
   private playlistService: PlaylistService;
@@ -38,8 +38,10 @@ export class PlaylistController {
   findUserPlaylists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.id;
+      const defaultPlaylistId = req.defaultPlaylistId;
       if (!userId) throw new BadRequest('User ID is required to fetch playlists.');
-      const playlists = await this.playlistService.findUserPlaylists(userId);
+      if (!defaultPlaylistId) throw new NotFound('DefaultPlaylist ID is not found.');
+      const playlists = await this.playlistService.findUserPlaylists(userId, defaultPlaylistId);
       sendResponse(res, new Success('Playlists found successfully.', playlists));
     } catch (error) {
       console.error('Error occurred in findUserPlaylists method:', error);
@@ -72,6 +74,20 @@ export class PlaylistController {
       sendResponse(res, new Success('Song added to playlist successfully.', updatedPlaylist));
     } catch (error) {
       console.error('Error occurred in addSongToPlaylist method:', error);
+      next(error);
+    }
+  };
+
+  createSongForPlaylist = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const playlistId = req.params.id;
+      const songUrl = req.body.url;
+      if (!playlistId) throw new BadRequest('Playlist ID is required to add a song');
+      if (!songUrl) throw new BadRequest('Song URL is required to add to the playlist');
+      const song = await this.playlistService.addSongToPlaylistByUrl(songUrl, playlistId);
+      sendResponse(res, new Created('Song added to playlist successfully', song));
+    } catch (error) {
+      console.error('Error occurred in createSongForPlaylist method:', error);
       next(error);
     }
   };

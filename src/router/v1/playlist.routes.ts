@@ -5,6 +5,7 @@ const playlistController = new PlaylistController();
 
 export const playlistRouter = Router();
 
+playlistRouter.post('/:id', playlistController.createSongForPlaylist);
 playlistRouter.post('/', playlistController.createPlaylist);
 playlistRouter.get('/', playlistController.findUserPlaylists);
 playlistRouter.get('/:id', playlistController.findPlaylistById);
