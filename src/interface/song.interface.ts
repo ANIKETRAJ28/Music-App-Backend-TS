@@ -5,3 +5,7 @@ export interface ISong {
   thumbnail: string;
   description: string;
 }
+
+export interface IJamSong extends ISong {
+  upvotes: number;
+}

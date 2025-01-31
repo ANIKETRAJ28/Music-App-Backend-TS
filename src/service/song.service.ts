@@ -2,11 +2,7 @@ import { IPlaylistResponse } from '../interface/playlist.interface';
 import { ISong } from '../interface/song.interface';
 import { PlaylistRepository } from '../repository/playlist.repository';
 import { SongRepository } from '../repository/song.repository';
-import { BadRequest } from '../util/ApiResponse.util';
-import { YT_REGEX } from '../util/videoRegex.util';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import youtubesearchapi from 'youtube-search-api';
+import { getSongDetails } from '../util/songDetails';
 
 export class SongService {
   private songRepository: SongRepository;
@@ -18,13 +14,7 @@ export class SongService {
   }
 
   async createSong(url: string): Promise<ISong> {
-    const isMatch = url.match(YT_REGEX);
-    if (!isMatch) throw new BadRequest('Invalid URL');
-    const videoId = url.split('v=')[1];
-    const videoDetails = await youtubesearchapi.GetVideoDetails(videoId);
-    const title = videoDetails.title;
-    const thumbnail = videoDetails.thumbnail.thumbnails[0].url;
-    const description = videoDetails.description;
+    const { title, thumbnail, description } = await getSongDetails(url);
     const createdSong = await this.songRepository.createSong(url, title, thumbnail, description);
     return createdSong;
   }
