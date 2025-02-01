@@ -15,19 +15,17 @@ export const initSocket = (server: HttpServer): Server | null => {
   io.on('connection', (socket) => {
     socket.on('start jam', async (id: string) => {
       socket.join(id);
+      console.log('joined room', id);
       const jamReposiotry = new JamRepository();
       const jam = await jamReposiotry.getQueue(id);
       socket.emit('get jam', { id: id, jam: jam });
     });
 
     socket.on('add song', async (id: string, url: string) => {
-      try {
-        const jamReposiotry = new JamRepository();
-        const song = await jamReposiotry.addSongToQueue(id, url);
-        socket.broadcast.to(id).emit('song added', song);
-      } catch (error) {
-        console.log('error occured in add song event', error);
-      }
+      const jamReposiotry = new JamRepository();
+      const song = await jamReposiotry.addSongToQueue(id, url);
+      console.log('song...');
+      socket.to(id).emit('song added', song);
     });
 
     socket.on('upvote song', async (id: string, songId: string) => {
@@ -58,6 +56,11 @@ export const initSocket = (server: HttpServer): Server | null => {
       } catch (error) {
         console.log('error occured in next song event', error);
       }
+    });
+
+    socket.on('leave jam', (id: string) => {
+      socket.leave(id);
+      console.log('left room', id);
     });
   });
 
